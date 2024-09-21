@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { TwitterApi } from "twitter-api-v2";
 import { SocialPostStrategy } from "../interfaces/social-post-strategy.interface";
 import { ConfigService } from "@nestjs/config";
@@ -6,17 +6,24 @@ import { ConfigService } from "@nestjs/config";
 @Injectable()
 export class TwitterPostStrategy implements SocialPostStrategy {
   private twitterClient: TwitterApi;
+  private readonly logger = new Logger(TwitterPostStrategy.name);
 
   constructor(private configService: ConfigService) {
+    const twitterConfig = this.configService.get('twitter');
+    if (!twitterConfig) {
+      throw new Error('Twitter configuration is missing');
+    }
+    
     this.twitterClient = new TwitterApi({
-      appKey: this.configService.get<string>("TWITTER_API_KEY"),
-      appSecret: this.configService.get<string>("TWITTER_API_SECRET"),
-      accessToken: this.configService.get<string>("TWITTER_ACCESS_TOKEN"),
-      accessSecret: this.configService.get<string>("TWITTER_ACCESS_TOKEN_SECRET"),
+      appKey: twitterConfig.apiKey,
+      appSecret: twitterConfig.apiSecret,
+      accessToken: twitterConfig.accessToken,
+      accessSecret: twitterConfig.accessTokenSecret,
     });
   }
 
   async post(content: string, images?: Buffer[]): Promise<boolean> {
+    this.logger.log(`Attempting to post to Twitter. Content: ${content.substring(0, 50)}...`);
     try {
       if (images && images.length > 0) {
         const mediaIds = await Promise.all(
@@ -29,9 +36,10 @@ export class TwitterPostStrategy implements SocialPostStrategy {
       } else {
         await this.twitterClient.v2.tweet(content);
       }
+      this.logger.log('Successfully posted to Twitter');
       return true;
     } catch (error) {
-      console.error("Error posting to Twitter:", error);
+      this.logger.error(`Error posting to Twitter: ${error.message}`);
       return false;
     }
   }

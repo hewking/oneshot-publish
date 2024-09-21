@@ -1,5 +1,4 @@
 export default () => ({
-//   port: parseInt(process.env.PORT, 10) || 3001,
   port: 3001,
   database: {
     host: process.env.DATABASE_HOST,
@@ -10,5 +9,9 @@ export default () => ({
     apiSecret: process.env.TWITTER_API_SECRET,
     accessToken: process.env.TWITTER_ACCESS_TOKEN,
     accessTokenSecret: process.env.TWITTER_ACCESS_TOKEN_SECRET,
+  },
+  jike: {
+    apiUrl: process.env.JIKE_API_URL,
+    accessToken: process.env.JIKE_ACCESS_TOKEN,
   },
 });

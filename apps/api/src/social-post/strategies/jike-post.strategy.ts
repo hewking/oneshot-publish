@@ -12,20 +12,20 @@ import { SocialPostStrategy } from "../interfaces/social-post-strategy.interface
 @Injectable()
 export class JikePostStrategy implements SocialPostStrategy {
   private readonly logger = new Logger(JikePostStrategy.name);
-  private readonly apiUrl: string;
-  private readonly accessToken: string;
   private readonly client: ApolloClient<any>;
 
   constructor(private configService: ConfigService) {
-    this.apiUrl = this.configService.get<string>("JIKE_API_URL");
-    this.accessToken = this.configService.get<string>("JIKE_ACCESS_TOKEN");
+    const jikeConfig = this.configService.get('jike');
+    if (!jikeConfig) {
+      throw new Error('Jike configuration is missing');
+    }
 
     this.client = new ApolloClient({
       link: new HttpLink({
-        uri: this.apiUrl,
+        uri: jikeConfig.apiUrl,
         fetch,
         headers: {
-          "x-jike-access-token": this.accessToken,
+          "x-jike-access-token": jikeConfig.accessToken,
         },
       }),
       cache: new InMemoryCache(),

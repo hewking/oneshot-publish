@@ -56,7 +56,7 @@ export default function SocialPost() {
     const formData = new FormData();
     formData.append("text", text);
     fileList.forEach((file) => {
-      formData.append('image', file.originFileObj as Blob);
+      formData.append("image", file.originFileObj as Blob);
     });
 
     try {

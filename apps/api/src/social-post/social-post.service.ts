@@ -1,45 +1,32 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { TwitterApi } from 'twitter-api-v2';
+import { Injectable } from "@nestjs/common";
+import { SocialPostStrategy } from "./interfaces/social-post-strategy.interface";
 
 @Injectable()
 export class SocialPostService {
-  private twitterClient: TwitterApi;
-  private readonly logger = new Logger(SocialPostService.name);
+  private strategies: Map<string, SocialPostStrategy> = new Map();
 
-  constructor(private configService: ConfigService) {
-    const twitterConfig = this.configService.get('twitter');
-    this.logger.log('Twitter config:', twitterConfig); // 添加日志
-
-    if (!twitterConfig) {
-      throw new Error('Twitter configuration is missing');
-    }
-
-    if (!twitterConfig.apiKey || !twitterConfig.apiSecret || !twitterConfig.accessToken || !twitterConfig.accessTokenSecret) {
-      throw new Error('Twitter API credentials are incomplete');
-    }
-
-    this.twitterClient = new TwitterApi({
-      appKey: twitterConfig.apiKey,
-      appSecret: twitterConfig.apiSecret,
-      accessToken: twitterConfig.accessToken,
-      accessSecret: twitterConfig.accessTokenSecret,
-    });
+  addStrategy(name: string, strategy: SocialPostStrategy) {
+    this.strategies.set(name, strategy);
   }
 
-  async createPost(text: string, images: Express.Multer.File[]) {
-    // Handle multiple images (up to 4)
-    const mediaIds = await Promise.all(
-      images.slice(0, 4).map(image => this.twitterClient.v1.uploadMedia(image.buffer, { mimeType: image.mimetype }))
-    );
+  async postToAll(content: string, images?: Buffer[]): Promise<Record<string, boolean>> {
+    const results: Record<string, boolean> = {};
+    for (const [name, strategy] of this.strategies) {
+      results[name] = await strategy.post(content, images);
+    }
+    return results;
+  }
 
-    // Publish to Twitter
-    await this.twitterClient.v2.tweet(text, { 
-      media: { 
-        media_ids: mediaIds as [string, string, string, string]
-      } 
-    });
-
-    // Logic for publishing to other platforms can be added here
+  async postToSpecific(platforms: string[], content: string, images?: Buffer[]): Promise<Record<string, boolean>> {
+    const results: Record<string, boolean> = {};
+    for (const platform of platforms) {
+      const strategy = this.strategies.get(platform);
+      if (strategy) {
+        results[platform] = await strategy.post(content, images);
+      } else {
+        results[platform] = false;
+      }
+    }
+    return results;
   }
 }

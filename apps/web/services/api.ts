@@ -12,6 +12,6 @@ export const updateItem = (id: number, item: Partial<Item>) => api.put<Item>(`/i
 export const deleteItem = (id: number) => api.delete<{ success: boolean }>(`/items/${id}`);
 
 export const createSocialPost = (formData: FormData) => 
-  api.post<{ success: boolean }>('/social-post', formData, {
+  api.post<{ success: boolean }>('/social-post/all', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });

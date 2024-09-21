@@ -2,8 +2,12 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ConfigService } from "@nestjs/config";
 import { json, urlencoded } from "express";
+import { setGlobalDispatcher, ProxyAgent } from "undici";
 
 async function bootstrap() {
+  // 这行解决了 Apollo Client 的警告
+  setGlobalDispatcher(new ProxyAgent({ uri: 'http://localhost' }));
+
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 

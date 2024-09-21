@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Item } from '../types/item';
 
 const api = axios.create({
-  baseURL: `http://localhost:3001`,
+  baseURL: '/api',
 });
 
 export const getItems = () => api.get<Item[]>('/items');

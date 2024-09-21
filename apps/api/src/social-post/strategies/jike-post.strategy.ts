@@ -8,24 +8,27 @@ import {
 } from "@apollo/client/core";
 import fetch from "cross-fetch";
 import { SocialPostStrategy } from "../interfaces/social-post-strategy.interface";
+import axios from "axios";
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class JikePostStrategy implements SocialPostStrategy {
   private readonly logger = new Logger(JikePostStrategy.name);
   private readonly client: ApolloClient<any>;
+  private readonly jikeConfig: any;
 
   constructor(private configService: ConfigService) {
-    const jikeConfig = this.configService.get('jike');
-    if (!jikeConfig) {
-      throw new Error('Jike configuration is missing');
+    this.jikeConfig = this.configService.get("jike");
+    if (!this.jikeConfig) {
+      throw new Error("Jike configuration is missing");
     }
 
     this.client = new ApolloClient({
       link: new HttpLink({
-        uri: jikeConfig.apiUrl,
+        uri: this.jikeConfig.apiUrl,
         fetch,
         headers: {
-          "x-jike-access-token": jikeConfig.accessToken,
+          "x-jike-access-token": this.jikeConfig.accessToken,
         },
       }),
       cache: new InMemoryCache(),
@@ -77,8 +80,65 @@ export class JikePostStrategy implements SocialPostStrategy {
   }
 
   private async uploadImages(images: Buffer[]): Promise<string[]> {
-    // 这里需要实现图片上传逻辑
-    // 返回上传后的图片 keys
-    return [];
+    const pictureKeys: string[] = [];
+    for (const image of images) {
+      const uptoken = await this.getUptoken();
+      const uploadUrl = await this.getUploadUrl(uptoken);
+      const pictureKey = await this.uploadToQiniu(uploadUrl, uptoken, image);
+      pictureKeys.push(pictureKey);
+    }
+    return pictureKeys;
+  }
+
+  private async getUptoken(): Promise<string> {
+    try {
+      const response = await fetch(
+        "https://upload.ruguoapp.com/1.0/misc/qiniu_uptoken",
+        {
+          headers: {
+            accept: "*/*",
+            "x-jike-access-token": this.jikeConfig.accessToken,
+          },
+          method: "GET",
+        }
+      );
+      const data = await response.json();
+      return data.uptoken;
+    } catch (error) {
+      this.logger.error(`Error getting uptoken: ${error.message}`);
+      throw error;
+    }
+  }
+
+  private async getUploadUrl(uptoken: string): Promise<string> {
+    // 这里应该实现获取上传URL的逻辑
+    // 由于没有具体的API信息，这里返回一个假设的URL
+    return "https://upload.qiniup.com/";
+  }
+
+  private async uploadToQiniu(
+    uploadUrl: string,
+    uptoken: string,
+    image: Buffer
+  ): Promise<string> {
+    try {
+      const fileName = `${uuidv4()}.jpg`;
+      const formData = new FormData();
+      formData.append("file", new Blob([image]), fileName);
+      formData.append("token", uptoken);
+      formData.append("fname", fileName);
+
+      const response = await axios.post(uploadUrl, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      this.logger.log(`Successfully uploaded image: ${fileName}`);
+      return response.data.key;
+    } catch (error) {
+      this.logger.error(`Error uploading image to Qiniu: ${error.message}`);
+      throw error;
+    }
   }
 }

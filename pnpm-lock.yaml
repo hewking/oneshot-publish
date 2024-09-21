@@ -49,6 +49,9 @@ importers:
       undici:
         specifier: ^6.19.8
         version: 6.19.8
+      uuid:
+        specifier: ^8.3.2
+        version: 8.3.2
     devDependencies:
       '@nestjs/cli':
         specifier: ^10.0.0
@@ -62,6 +65,9 @@ importers:
       '@types/node':
         specifier: ^20.3.1
         version: 20.16.5
+      '@types/uuid':
+        specifier: ^8.3.0
+        version: 8.3.4
       ts-node:
         specifier: ^10.9.1
         version: 10.9.2(@types/node@20.16.5)(typescript@5.6.2)
@@ -871,6 +877,10 @@ packages:
       '@types/http-errors': 2.0.4
       '@types/node': 20.16.5
       '@types/send': 0.17.4
+    dev: true
+
+  /@types/uuid@8.3.4:
+    resolution: {integrity: sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw==, tarball: https://registry.npmmirror.com/@types/uuid/-/uuid-8.3.4.tgz}
     dev: true
 
   /@webassemblyjs/ast@1.12.1:
@@ -3757,6 +3767,11 @@ packages:
   /utils-merge@1.0.1:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==, tarball: https://registry.npmmirror.com/utils-merge/-/utils-merge-1.0.1.tgz}
     engines: {node: '>= 0.4.0'}
+    dev: false
+
+  /uuid@8.3.2:
+    resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==, tarball: https://registry.npmmirror.com/uuid/-/uuid-8.3.2.tgz}
+    hasBin: true
     dev: false
 
   /v8-compile-cache-lib@3.0.1:

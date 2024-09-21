@@ -1,10 +1,12 @@
+/** @jsxImportSource @emotion/react */
 import React, { useState } from "react";
 import { createSocialPost } from "../services/api";
 import Link from "next/link";
-import { Upload, Modal, message, Button, Input } from "antd";
+import { Upload, Modal, message, Button, Input, Card } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { RcFile, UploadProps } from "antd/es/upload";
 import type { UploadFile } from "antd/es/upload/interface";
+import { socialPostStyles } from "../styles/SocialPost.styles";
 
 const { TextArea } = Input;
 
@@ -16,12 +18,13 @@ const getBase64 = (file: RcFile): Promise<string> =>
     reader.onerror = (error) => reject(error);
   });
 
-export default function SocialPost() {
+const SocialPost: React.FC = () => {
   const [text, setText] = useState("");
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
   const [previewTitle, setPreviewTitle] = useState("");
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   const handleCancel = () => setPreviewOpen(false);
 
@@ -32,9 +35,7 @@ export default function SocialPost() {
 
     setPreviewImage(file.url || (file.preview as string));
     setPreviewOpen(true);
-    setPreviewTitle(
-      file.name || file.url!.substring(file.url!.lastIndexOf("/") + 1)
-    );
+    setPreviewTitle(file.name || file.url!.substring(file.url!.lastIndexOf("/") + 1));
   };
 
   const handleChange: UploadProps["onChange"] = ({ fileList: newFileList }) =>
@@ -43,13 +44,13 @@ export default function SocialPost() {
   const uploadButton = (
     <div>
       <PlusOutlined />
-      <div style={{ marginTop: 8 }}>Upload</div>
+      <div className="ant-upload-text">Upload</div>
     </div>
   );
 
   const handleSubmit = async () => {
-    if (!text || fileList.length === 0) {
-      message.error("Please enter text and upload at least one image");
+    if (!text) {
+      message.error("Please enter some text for your post");
       return;
     }
 
@@ -70,48 +71,78 @@ export default function SocialPost() {
     }
   };
 
-  return (
-    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
-      <h1 style={{ borderBottom: "1px solid #ccc", paddingBottom: "10px" }}>
-        Create Social Post
-      </h1>
-      <Link href="/">
-        <Button type="primary" style={{ marginBottom: "20px" }}>
-          Back to Home
-        </Button>
-      </Link>
-      <div style={{ marginBottom: "20px" }}>
-        <TextArea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="What's on your mind?"
-          autoSize={{ minRows: 3, maxRows: 5 }}
-        />
+  const togglePreviewMode = () => {
+    setIsPreviewMode(!isPreviewMode);
+  };
+
+  const renderPreview = () => (
+    <Card css={socialPostStyles.previewCard}>
+      <h2 css={socialPostStyles.previewTitle}>Preview</h2>
+      <p css={socialPostStyles.previewContent}>{text}</p>
+      <div css={socialPostStyles.previewImages}>
+        {fileList.map((file) => (
+          <img
+            key={file.uid}
+            src={file.thumbUrl || file.url}
+            alt={file.name}
+            css={socialPostStyles.previewImage}
+          />
+        ))}
       </div>
+    </Card>
+  );
+
+  const renderForm = () => (
+    <>
+      <TextArea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="What's on your mind?"
+        autoSize={{ minRows: 3, maxRows: 5 }}
+        css={socialPostStyles.postTextarea}
+      />
       <Upload
         listType="picture-card"
         fileList={fileList}
         onPreview={handlePreview}
         onChange={handleChange}
         beforeUpload={() => false} // Prevent auto upload
+        css={socialPostStyles.postUpload}
       >
         {fileList.length >= 9 ? null : uploadButton}
       </Upload>
-      <Modal
-        open={previewOpen}
-        title={previewTitle}
-        footer={null}
-        onCancel={handleCancel}
-      >
+      <Modal open={previewOpen} title={previewTitle} footer={null} onCancel={handleCancel}>
         <img alt="example" style={{ width: "100%" }} src={previewImage} />
       </Modal>
-      <Button
-        type="primary"
-        onClick={handleSubmit}
-        style={{ marginTop: "20px" }}
-      >
-        Create Post
-      </Button>
+    </>
+  );
+
+  return (
+    <div css={socialPostStyles.container}>
+      <h1 css={socialPostStyles.title}>Create Social Post</h1>
+      <div css={socialPostStyles.postForm}>
+        {isPreviewMode ? renderPreview() : renderForm()}
+        <div css={socialPostStyles.buttonGroup}>
+          <Button onClick={togglePreviewMode} css={socialPostStyles.button}>
+            {isPreviewMode ? "Edit" : "Preview"}
+          </Button>
+          <Button
+            type="primary"
+            onClick={handleSubmit}
+            disabled={isPreviewMode}
+            css={socialPostStyles.button}
+          >
+            Create Post
+          </Button>
+        </div>
+      </div>
+      <Link href="/">
+        <Button type="link" style={{ marginTop: "20px" }}>
+          Back to Home
+        </Button>
+      </Link>
     </div>
   );
-}
+};
+
+export default SocialPost;

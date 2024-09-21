@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { createSocialPost } from '../services/api';
-import Link from 'next/link';
-import { Upload, Modal, message, Button, Input } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
-import type { RcFile, UploadProps } from 'antd/es/upload';
-import type { UploadFile } from 'antd/es/upload/interface';
+import React, { useState } from "react";
+import { createSocialPost } from "../services/api";
+import Link from "next/link";
+import { Upload, Modal, message, Button, Input } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import type { RcFile, UploadProps } from "antd/es/upload";
+import type { UploadFile } from "antd/es/upload/interface";
 
 const { TextArea } = Input;
 
@@ -17,11 +17,11 @@ const getBase64 = (file: RcFile): Promise<string> =>
   });
 
 export default function SocialPost() {
-  const [text, setText] = useState('');
+  const [text, setText] = useState("");
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewImage, setPreviewImage] = useState('');
-  const [previewTitle, setPreviewTitle] = useState('');
+  const [previewImage, setPreviewImage] = useState("");
+  const [previewTitle, setPreviewTitle] = useState("");
 
   const handleCancel = () => setPreviewOpen(false);
 
@@ -32,10 +32,12 @@ export default function SocialPost() {
 
     setPreviewImage(file.url || (file.preview as string));
     setPreviewOpen(true);
-    setPreviewTitle(file.name || file.url!.substring(file.url!.lastIndexOf('/') + 1));
+    setPreviewTitle(
+      file.name || file.url!.substring(file.url!.lastIndexOf("/") + 1)
+    );
   };
 
-  const handleChange: UploadProps['onChange'] = ({ fileList: newFileList }) =>
+  const handleChange: UploadProps["onChange"] = ({ fileList: newFileList }) =>
     setFileList(newFileList);
 
   const uploadButton = (
@@ -47,36 +49,38 @@ export default function SocialPost() {
 
   const handleSubmit = async () => {
     if (!text || fileList.length === 0) {
-      message.error('Please enter text and upload at least one image');
+      message.error("Please enter text and upload at least one image");
       return;
     }
 
     const formData = new FormData();
-    formData.append('text', text);
-    fileList.forEach((file, index) => {
-      formData.append(`image${index}`, file.originFileObj as Blob);
+    formData.append("text", text);
+    fileList.forEach((file) => {
+      formData.append('image', file.originFileObj as Blob);
     });
 
     try {
       await createSocialPost(formData);
-      message.success('Post created successfully!');
-      setText('');
+      message.success("Post created successfully!");
+      setText("");
       setFileList([]);
     } catch (error) {
-      console.error('Error creating post:', error);
-      message.error('Failed to create post');
+      console.error("Error creating post:", error);
+      message.error("Failed to create post");
     }
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-      <h1 style={{ borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>Create Social Post</h1>
+    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
+      <h1 style={{ borderBottom: "1px solid #ccc", paddingBottom: "10px" }}>
+        Create Social Post
+      </h1>
       <Link href="/">
-        <Button type="primary" style={{ marginBottom: '20px' }}>
+        <Button type="primary" style={{ marginBottom: "20px" }}>
           Back to Home
         </Button>
       </Link>
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: "20px" }}>
         <TextArea
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -93,10 +97,19 @@ export default function SocialPost() {
       >
         {fileList.length >= 9 ? null : uploadButton}
       </Upload>
-      <Modal open={previewOpen} title={previewTitle} footer={null} onCancel={handleCancel}>
-        <img alt="example" style={{ width: '100%' }} src={previewImage} />
+      <Modal
+        open={previewOpen}
+        title={previewTitle}
+        footer={null}
+        onCancel={handleCancel}
+      >
+        <img alt="example" style={{ width: "100%" }} src={previewImage} />
       </Modal>
-      <Button type="primary" onClick={handleSubmit} style={{ marginTop: '20px' }}>
+      <Button
+        type="primary"
+        onClick={handleSubmit}
+        style={{ marginTop: "20px" }}
+      >
         Create Post
       </Button>
     </div>

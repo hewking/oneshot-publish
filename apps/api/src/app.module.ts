@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import configuration from './config/configuration';
 import { ItemsController } from './items.controller';
 import { ItemsService } from './items.service';
 import { SocialPostController } from './social-post/social-post.controller';
@@ -9,7 +10,7 @@ import { SocialPostService } from './social-post/social-post.service';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      load: [configuration],
     }),
   ],
   controllers: [ItemsController, SocialPostController],

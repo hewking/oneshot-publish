@@ -2,30 +2,26 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ConfigService } from "@nestjs/config";
 import { json, urlencoded } from "express";
-import { ExpressAdapter } from '@nestjs/platform-express';
-import * as express from 'express';
-
-let app: express.Express;
+import { setGlobalDispatcher, ProxyAgent } from "undici";
 
 async function bootstrap() {
-  if (!app) {
-    const expressApp = express();
-    const nestApp = await NestFactory.create(AppModule, new ExpressAdapter(expressApp));
-    const configService = nestApp.get(ConfigService);
+  // 这行解决了 Apollo Client 的警告
+  setGlobalDispatcher(new ProxyAgent({ uri: "http://localhost" }));
 
-    nestApp.enableCors();
-    nestApp.use(json({ limit: "50mb" }));
-    nestApp.use(urlencoded({ extended: true, limit: "50mb" }));
+  const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
 
-    nestApp.setGlobalPrefix("api");
+  console.log("All config:", configService.get("port")); // 添加这行来查看所有配置
 
-    await nestApp.init();
-    app = expressApp;
-  }
-  return app;
+  const port = configService.get<number>("port") || 3001;
+
+  app.enableCors();
+  app.use(json({ limit: "50mb" }));
+  app.use(urlencoded({ extended: true, limit: "50mb" }));
+
+  app.setGlobalPrefix("api");
+
+  await app.listen(port);
+  console.log(`应用程序正在运行: ${await app.getUrl()}`);
 }
-
-export default async (req: express.Request, res: express.Response) => {
-  const server = await bootstrap();
-  server(req, res);
-};
+bootstrap();
